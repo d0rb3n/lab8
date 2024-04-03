@@ -111,7 +111,7 @@ def main():
                 #draw random color lines
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if mode == 'random':
-                    color = (random.randrange(256), random.randrange(256), random.randrange(256))
+                    color = (0,0,0)
                 else:
                     color = colors[mode]
                 pygame.draw.circle(screen, color, event.pos, radius)
