@@ -3,7 +3,7 @@ from pygame.locals import *
 import random, time
   
 pygame.init()
-FPS = 60
+FPS = 120
 FramePerSec = pygame.time.Clock()
 
 red   = (255, 0, 0)
@@ -42,6 +42,7 @@ class Enemy(pygame.sprite.Sprite):
             SCORE += 1
             self.rect.top = 0
             self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
+
  
 #player car
 class Player(pygame.sprite.Sprite):
@@ -60,31 +61,67 @@ class Player(pygame.sprite.Sprite):
               if pressed_keys[K_RIGHT]:
                   self.rect.move_ip(5, 0)
                    
+
+#coin 
+class Coin(pygame.sprite.Sprite):
+      def __init__(self):
+        super().__init__() 
+        image = pygame.image.load('coin.png')
+        def_img_size = (50, 50)
+        self.image = pygame.transform.scale(image,def_img_size)
+        self.rect = self.image.get_rect()
+        self.rect.center = (random.randint(40, SCREEN_WIDTH-40), 0)  
+ 
+      def move(self):
+        global SCORE
+        self.rect.move_ip(0,SPEED)
+        if (self.rect.top > 600):
+            self.rect.top = 0
+            self.rect.center = (random.randint(40, SCREEN_WIDTH - 40), 0)
 #Setting up Sprites        
 P1 = Player()
 E1 = Enemy()
- 
+C1 = Coin()
+#E2 = Enemy()
+
 #Creating Sprites Groups
 enemies = pygame.sprite.Group()
 enemies.add(E1)
+coins = pygame.sprite.Group()
+coins.add(C1)
+#enemies.add(E2)
 all_sprites = pygame.sprite.Group()
 all_sprites.add(P1)
 all_sprites.add(E1)
- 
-#Adding a new User event 
+all_sprites.add(C1)
+#all_sprites.add(E2)
+
+#increasing speed
 INC_SPEED = pygame.USEREVENT + 1
 pygame.time.set_timer(INC_SPEED, 1000)
- 
+
+#new user event for spawning coins
+SPAWN_COIN = pygame.USEREVENT + 2
+pygame.time.set_timer(SPAWN_COIN, 5000) 
+
+#spawning new coins
+def spawn_coin():
+    new_coin = Coin()
+    coins.add(new_coin)
+    all_sprites.add(new_coin)
+
 #Game Loop
 while True:
        
     #Cycles through all events occurring  
     for event in pygame.event.get():
-        if event.type == INC_SPEED:
-              SPEED += 0.5     
-        if event.type == QUIT:
+        if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        if event.type == SPAWN_COIN:
+            spawn_coin()
+        if event.type == INC_SPEED:
+              SPEED += 0.5  
  
     DISPLAYSURF.blit(background, (0,0))
     scores = font_small.render(str(SCORE), True, white)
@@ -94,21 +131,26 @@ while True:
     for entity in all_sprites:
         DISPLAYSURF.blit(entity.image, entity.rect)
         entity.move()
+
+    #hiitng the coin
+    if pygame.sprite.spritecollide(P1, coins, True):
+        pygame.mixer.Sound('catch.mp3').play()
+        SCORE += 10
  
     #hitting the car
     if pygame.sprite.spritecollideany(P1, enemies):
-          pygame.mixer.Sound('crash.wav').play()
-          time.sleep(0.5)
+        pygame.mixer.Sound('crash.wav').play()
+        time.sleep(0.5)
                     
-          DISPLAYSURF.fill(red)
-          DISPLAYSURF.blit(game_over, (30,250))
+        DISPLAYSURF.fill(red)
+        DISPLAYSURF.blit(game_over, (30,250))
            
-          pygame.display.update()
-          for entity in all_sprites:
-                entity.kill() 
-          time.sleep(2)
-          pygame.quit()
-          sys.exit()        
+        pygame.display.update()
+        for entity in all_sprites:
+            entity.kill() 
+        time.sleep(2)
+        pygame.quit()
+        sys.exit()        
          
     pygame.display.update()
     FramePerSec.tick(FPS)
