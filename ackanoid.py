@@ -63,6 +63,9 @@ block_list = [pygame.Rect(10 + 120 * i, 50 + 70 * j,
 color_list = [(random.randrange(0, 255), 
     random.randrange(0, 255),  random.randrange(0, 255))
               for i in range(10) for j in range(4)] 
+unbreakable_list = [pygame.Rect(10 + 250 * i, 350 + 30*j,
+         100, 50) for i in range(5) for j in range (1)]
+unbreakable_color = [(255, 255, 255) for i in range(5) for j in range(1)]
 print(block_list)
 #Game over Screen
 losefont = pygame.font.SysFont('comicsansms', 40)
@@ -84,13 +87,12 @@ while not done:
 
     screen.fill(bg)
     
-    # print(next(enumerate(block_list)))
-    
     [pygame.draw.rect(screen, color_list[color], block)
      for color, block in enumerate (block_list)] #drawing blocks
+    [pygame.draw.rect(screen, pygame.Color(255, 255, 255), unbreakable)
+     for color, unbreakable in enumerate (unbreakable_list)]
     pygame.draw.rect(screen, pygame.Color(255, 255, 255), paddle)
     pygame.draw.circle(screen, pygame.Color(255, 0, 0), ball.center, ballRadius)
-    # print(next(enumerate (block_list)))
 
     #Ball movement
     ballacc = acc * FPS
@@ -110,6 +112,7 @@ while not done:
 
     #Collision blocks
     hitIndex = ball.collidelist(block_list)
+    hit_unbreakable = ball.collidelist(unbreakable_list)
 
     if hitIndex != -1:
         hitRect = block_list.pop(hitIndex)
@@ -119,6 +122,9 @@ while not done:
         paddleW -= 3 #paddle shortening
         collision_sound.play()
         paddle = pygame.Rect(padx,pady,paddleW,paddleH)
+    if hit_unbreakable != -1:
+        hit_rect = unbreakable_list[hit_unbreakable]
+        dx, dy = detect_collision(dx, dy, ball, hit_rect)
         
     #Game score
     game_score_text = game_score_fonts.render(f'Your game score is: {game_score}', True, (255, 255, 255))
@@ -131,6 +137,7 @@ while not done:
     elif not len(block_list):
         screen.fill((255,255, 255))
         screen.blit(wintext, wintextRect)
+
     #Paddle Control
     key = pygame.key.get_pressed()
     if key[pygame.K_LEFT] and paddle.left > 0:
